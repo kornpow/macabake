@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import code
 from pprint import pprint
+import base64
 
 from lndgrpc import LNDClient
 from lndgrpc.client import ln
@@ -350,7 +351,7 @@ def bakemacaroon(output_filename, output_filepath, apis, output_format):
     if output_format == "hex":
         output_macaroon = macaroon
     elif output_format == "base64":
-        output_macaroon = base64.b64encode(b"")
+        output_macaroon = base64.b64encode(bytes.fromhex(macaroon))
     elif output_format == "bytes":
         output_macaroon = bytes.fromhex(macaroon)
 
