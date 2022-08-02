@@ -1,9 +1,13 @@
 import os
 from pathlib import Path
 import code
+from pprint import pprint
 
 from lndgrpc import LNDClient
 from lndgrpc.client import ln
+
+import click
+
 
 credential_path = Path(os.getenv("CRED_PATH"))
 
@@ -11,7 +15,7 @@ credential_path = Path(os.getenv("CRED_PATH"))
 
 
 
-mac = str(credential_path.joinpath("test1234.macaroon").absolute())
+mac = str(credential_path.joinpath("admin.macaroon").absolute())
 tls = str(credential_path.joinpath("tls.cert").absolute())
 
 # Create the connection to the remote node
@@ -21,9 +25,6 @@ lnd = LNDClient(
     macaroon_filepath=mac,
     cert_filepath=tls
 )
-
-
-
 
 lncli_mapping = {
     "getinfo": "/lnrpc.Lightning/GetInfo",
@@ -282,6 +283,24 @@ rpc_commands = {
     ],
 }
 
+subsystems = [
+    "Autopilot",
+    "ChainNotifier",
+    "Dev",
+    "Invoices",
+    "Lightning",
+    "NeutrinoKit",
+    "Peers",
+    "Router",
+    "Signer",
+    "State",
+    "Versioner",
+    "WalletKit",
+    "WalletUnlocker",
+    "Watchtower",
+    "WatchtowerClient"
+]
+
 def uri_from_subsystem(subsystem):
     for uri_base in rpc_commands:
         if subsystem in uri_base:
@@ -310,26 +329,56 @@ for subsystem in rpc_commands:
 
 
 
-r = build_permissions([
-    ("Lightning", "GetInfo"),
-    ("Lightning", "AddInvoice"),   
-])
+@click.group()
+def macabake():
+    pass
 
-# ln.MacaroonPermission(entity=,action=)
+@click.command()
+@click.option('--output_filename', default=None, help='Number of greetings.')
+@click.option('--output_filepath', default=None, help='Number of greetings.')
+@click.option('--apis', required=True, type=(str, str),  help='Number of greetings.', multiple=True)
+@click.option('--output_format', default="bytes", type=click.Choice(["hex", "base64", "bytes"]), help='Number of greetings.')
+def bakemacaroon(output_filename, output_filepath, apis, output_format):
+    print(apis)
+    r = build_permissions(apis)
+    baked = lnd.bake_macaroon(
+        permissions=r,
+        root_key_id=420
+    )
+    print(baked)
+    macaroon = baked.macaroon
+    if output_format == "hex":
+        output_macaroon = macaroon
+    elif output_format == "base64":
+        output_macaroon = base64.b64encode(b"")
+    elif output_format == "bytes":
+        output_macaroon = bytes.fromhex(macaroon)
 
-baked = lnd.bake_macaroon(
-    permissions=r,
-    root_key_id=7
-)
+    print(mac)
+    print(credential_path)
+    output_path = Path(credential_path)
+    baked_mac = output_path.joinpath(output_filename)
+    with open(baked_mac, "wb") as f:
+        f.write(output_macaroon)
+    print(f"Wrote macaroon to file: {baked_mac}")
 
-code.interact(local=dict(globals(), **locals()))  
+@click.command()
+@click.option('--subsystem', default=None, help='Number of greetings.')
+def list_lnd_apis(subsystem):
+    if subsystem:
+        subsystem_full = uri_from_subsystem(subsystem)
+        print(f"APIs in Subsystem: {subsystem}")
+        pprint(rpc_commands[subsystem_full])
+    else:
+        pprint(rpc_commands)
 
+@click.command()
+def list_lnd_subsystems():
+    pprint(subsystems)
 
-credential_path = Path(credential_path)
-baked_mac = credential_path.joinpath("test1234.macaroon")
-with open(baked_mac,"wb") as f:
-    f.write(bytes.fromhex(baked.macaroon))
+macabake.add_command(bakemacaroon)
+macabake.add_command(list_lnd_apis)
+macabake.add_command(list_lnd_subsystems)
 
-
-
-lnd.list_macaroon_ids()
+if __name__ == '__main__':
+    macabake()
