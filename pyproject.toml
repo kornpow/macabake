@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "macabake"
-version = "0.0.1"
+version = "0.0.3"
 description = ""
 authors = ["Sam Korn <korn94sam@gmail.com>"]
+readme = "README.md"
 
 packages = [
     { include = "src" },

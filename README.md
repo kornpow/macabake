@@ -5,9 +5,9 @@ A tool for creating custom macaroons
 # LND Config Environment Variables
 Put these environment variables into your path
 ```
-export CRED_PATH=/home/skorn/Documents/creds/kungmeow/lnd
-export LND_CRED_PATH=/home/skorn/Documents/creds/kungmeow/lnd
-export LND_NODE_IP=kungmeow.m.voltageapp.io
+export CRED_PATH=/home/lnd_user/Documents/creds/awesome-node/lnd
+export LND_CRED_PATH=/home/lnd_user/Documents/creds/awesome-node/lnd
+export LND_NODE_IP=awesome-node.m.voltageapp.io
 export LND_NODE_PORT=10009
 ```
 
